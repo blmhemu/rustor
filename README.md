@@ -1,11 +1,11 @@
 # rustor
 A simple file server to learn rust and warp. 
 
-Note: This can be done in a much simpler way using `warp::fs::dir`
+**Note: This is a learner's project and is not remotely usable. Also, this can be implemented in a simpler way using `warp::fs::dir`, but where's the fun in that.**
 
 ## Build and run
-* **Required:** Edit the `BASE_FOLDER` to point to the folder you want to serve. (I know this is suboptimal and could be read from config file. But hey ! I am a beginner).
-* Change the IP (say from 0.0.0.0 to 127.0.0.1) and Port (say 3030:8080) per your needs. (Again can be read from a config file)
+* **Required:** Edit the `BASE_FOLDER` in `handlers.rs` to point to the folder you want to serve. (I know this is suboptimal).
+* Change the IP (say from 0.0.0.0 to 127.0.0.1) and Port (say 3030:8080) per your needs. (Again, suboptimal and should ideally be read from a config file)
 * Run `cargo run`
 
 ## API
@@ -17,5 +17,7 @@ Note: This can be done in a much simpler way using `warp::fs::dir`
 * warp, hyper, tokio
 * [sailfish](https://github.com/Kogia-sima/sailfish) for web templating.
 
-## Usable Alternatives
+## Usable Open Source Alternatives
 * [miniserve](https://github.com/svenstaro/miniserve)
+* [filebrowser](https://filebrowser.org/)
+* [filestash](https://www.filestash.app/)
