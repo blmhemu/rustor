@@ -15,11 +15,11 @@ A simple file server to learn rust and warp.
 * Delete the file/folder at `my/dir/rec` -> `GET http://IP:PORT/api/rm?path=my%2Fdir%2Frec`
 
 ## Capabilities / Features
-[x] View and traverse folders
-[x] Download files
-[x] Create folders
-[x] Delete folders and files
-[ ] Upload files
+- [x] View and traverse folders
+- [x] Download files
+- [x] Create folders
+- [x] Delete folders and files
+- [ ] Upload files
 
 ## Dependencies
 * warp, hyper, tokio
