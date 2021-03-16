@@ -1,13 +1,16 @@
-mod data;
-mod handlers;
+use std::fmt::Error;
+
+use tokio::fs::File;
+use warp::multipart::{FormData, FormOptions, Part};
+use warp::{http::StatusCode, Filter, Rejection, Reply};
 
 use crate::data::QueryOptions;
-use crate::handlers::{get_dir, get_file, get_path, handle_rejection, BASE_FOLDER};
-use std::fmt::Error;
-use std::path::{Path, PathBuf};
-use tokio::{fs::DirEntry, io};
-use warp::path::full;
-use warp::{http::StatusCode, Filter, Rejection, Reply};
+use crate::handlers::{
+    get_dir, get_file, get_newdir_name, get_path, handle_rejection, InvalidPathError, BASE_FOLDER,
+};
+
+mod data;
+mod handlers;
 
 #[tokio::main]
 async fn main() {
@@ -50,6 +53,13 @@ async fn main() {
         .and(warp::post())
         .and(get_path())
         .and_then(handlers::web_delete);
+    let web_create = web
+        .and(warp::path("mkdir"))
+        .and(warp::path::end())
+        .and(warp::get())
+        .and(get_dir())
+        .and(get_newdir_name())
+        .and_then(handlers::web_create);
 
     warp::serve(
         api_ls
@@ -57,6 +67,7 @@ async fn main() {
             .or(api_delete)
             .or(web_ls)
             .or(web_delete)
+            .or(web_create)
             .recover(handle_rejection),
     )
     .run(([0, 0, 0, 0], 3030))

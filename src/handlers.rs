@@ -1,14 +1,12 @@
 use crate::data;
 use crate::data::{DirTemplate, FileData, QueryOptions};
 use sailfish::TemplateOnce;
-use serde_json::to_string;
 use std::convert::Infallible;
 use std::error;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use tokio::io;
 use tokio_util::codec::{BytesCodec, FramedRead};
-use tokio_util::io::StreamReader;
 use warp::http::header::{CONTENT_DISPOSITION, CONTENT_ENCODING};
 use warp::http::{HeaderValue, Response, StatusCode};
 use warp::hyper::Body;
@@ -77,29 +75,50 @@ pub(crate) async fn web_list(path: PathBuf) -> Result<impl warp::Reply, Infallib
     }
 
     let ctx = DirTemplate {
-        curr_path: path.to_str().unwrap().to_string(),
+        curr_path: path
+            .strip_prefix(BASE_FOLDER)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string(),
         messages: file_list,
     };
     Ok(warp::reply::html(ctx.render_once().unwrap()))
 }
 
 pub(crate) async fn web_delete(path: PathBuf) -> Result<impl warp::Reply, Infallible> {
-    let is_deleted;
-    match path.is_dir() {
-        true => is_deleted = tokio::fs::remove_dir_all(path.clone()).await,
-        false => is_deleted = tokio::fs::remove_file(path.clone()).await,
+    let is_deleted = match path.is_dir() {
+        true => tokio::fs::remove_dir_all(path.clone()).await,
+        false => tokio::fs::remove_file(path.clone()).await,
     };
-    let deletion_string = if let Ok(_) = is_deleted {
-        "Successfully deleted "
-    } else {
-        "Deletion failed for"
+    let deletion_string = match is_deleted {
+        Ok(()) => "Successfully deleted ",
+        Err(_) => "Deletion failed for",
     };
 
     Ok(warp::reply::html(format!(
-        "<html>\n<body>\n<h2>{} {}</h2>\nVisit <a href=\"/web/ls\">{}</a> to view all the files.\n</body>\n</html>",
+        "<html>\n<body>\n<h2>{} {}</h2>\nReturn to <a href=\"/web/ls\">Home Page</a>.\n</body>\n</html>",
         deletion_string,
         path.file_name().unwrap().to_str().unwrap(),
-        "WebUI"
+    )))
+}
+
+pub(crate) async fn web_create(
+    path: PathBuf,
+    name: String,
+) -> Result<impl warp::Reply, Infallible> {
+    let new_dir = path.join(name);
+    let is_created = tokio::fs::create_dir(new_dir.clone()).await;
+    let creation_string = match is_created {
+        Ok(()) => "Successfully created ",
+        Err(_) => "Creation failed for",
+    };
+
+    Ok(warp::reply::html(format!(
+        "<html>\n<body>\n<h2>{} {}</h2>\nReturn to <a href=\"/web/ls?path={}\">created folder</a>.\n</body>\n</html>",
+        creation_string,
+        new_dir.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap(),
+        new_dir.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap(),
     )))
 }
 
@@ -108,14 +127,32 @@ pub struct NotAFileError;
 #[derive(Debug)]
 pub struct NotADirError;
 #[derive(Debug)]
+pub struct InvalidName;
+#[derive(Debug)]
 pub struct InvalidPathError;
 #[derive(Debug)]
 pub struct TokioError(io::Error);
 
 impl reject::Reject for NotAFileError {}
 impl reject::Reject for NotADirError {}
+impl reject::Reject for InvalidName {}
 impl reject::Reject for InvalidPathError {}
 impl reject::Reject for TokioError {}
+
+pub(crate) fn get_newdir_name() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
+    warp::query::<QueryOptions>().and_then(|opts: QueryOptions| async {
+        match opts.dirname {
+            Some(name) => {
+                let sanitize_filename = sanitize_filename::sanitize(&name);
+                if sanitize_filename.is_empty() || sanitize_filename != name {
+                    return Err(warp::reject::custom(InvalidName));
+                };
+                Ok(sanitize_filename)
+            }
+            None => Err(warp::reject::custom(InvalidName)),
+        }
+    })
+}
 
 pub(crate) fn get_dir() -> impl Filter<Extract = (PathBuf,), Error = Rejection> + Copy {
     get_path().and_then(get_valid_dir)
@@ -183,6 +220,10 @@ pub(crate) async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infal
         code = StatusCode::BAD_REQUEST;
         message = "NOT_A_DIRECTORY";
         description = Some("This operation cannot be done on a file.");
+    } else if let Some(InvalidName) = err.find() {
+        code = StatusCode::BAD_REQUEST;
+        message = "INVALID_NAME";
+        description = Some("Please provide a proper name.");
     } else if let Some(InvalidPathError) = err.find() {
         code = StatusCode::BAD_REQUEST;
         message = "INVALID_PATH";

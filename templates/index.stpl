@@ -23,7 +23,13 @@ tr:nth-child(even) {
 
 <h2>Files</h2>
 
-<form id="upload" action="/web/upload?path=<%= curr_path %>" method="post">
+<form action="/web/mkdir" method="get">
+    <input type="hidden" name="path" value="<%= curr_path %>" />
+    <input name="dirname">
+    <button>Create Directory</button>
+</form>
+
+<form id="upload" action="/web/mkdir?path=<%= curr_path %>" method="post">
     <button type="submit">Upload</button>
 </form>
 
@@ -56,3 +62,5 @@ tr:nth-child(even) {
 
 </body>
 </html>
+
+

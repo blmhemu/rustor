@@ -22,6 +22,7 @@ pub(crate) struct FileData {
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct QueryOptions {
     pub path: Option<PathBuf>,
+    pub dirname: Option<String>,
 }
 
 /// An API error serializable to JSON.
