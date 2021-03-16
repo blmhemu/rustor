@@ -23,24 +23,33 @@ tr:nth-child(even) {
 
 <h2>Files</h2>
 
+<form id="upload" action="/web/upload?path=<%= curr_path %>" method="post">
+    <button type="submit">Upload</button>
+</form>
 
 <table>
     <tr>
         <th>Name</th>
         <th>Type</th>
+        <th>Action</th>
     </tr>
     <% for msg in &messages { %>
     <tr>
         <% if msg.is_dir == true { %>
             <td><a href="/web/ls?path=<%= msg.path %>"><%= msg.name %></a></td>
         <% } else { %>
-            <td><a href="/api/download?path=<%= msg.path %>"><%= msg.name %></a></td>
+            <td><a href="/api/dl?path=<%= msg.path %>"><%= msg.name %></a></td>
         <% } %>
         <% if msg.is_dir == true { %>
             <td>Directory</td>
         <% } else { %>
             <td>File</td>
         <% } %>
+        <td>
+            <form id="delete" action="/web/rm?path=<%= msg.path %>" method="post">
+                <button type="submit">Delete</button>
+            </form>
+        </td>
     </tr>
     <% } %>
 </table>

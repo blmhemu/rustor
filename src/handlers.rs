@@ -15,31 +15,7 @@ use warp::hyper::Body;
 use warp::reply::Json;
 use warp::{hyper, reject, Filter, Rejection, Reply};
 
-pub(crate) const BASE_FOLDER: &str = "/Users/hbollamreddi/rustor";
-
-pub(crate) async fn web_list(path: PathBuf) -> Result<impl warp::Reply, Infallible> {
-    let mut dir = tokio::fs::read_dir(path).await.unwrap();
-    let mut file_list = Vec::new();
-    while let Some(child) = dir.next_entry().await.unwrap() {
-        file_list.push(FileData {
-            path: urlencoding::encode(
-                child
-                    .path()
-                    .strip_prefix(BASE_FOLDER)
-                    .unwrap()
-                    .to_str()
-                    .unwrap(),
-            ),
-            is_dir: child.path().is_dir(),
-            name: child.file_name().to_str().unwrap().to_string(),
-        });
-    }
-
-    let ctx = DirTemplate {
-        messages: file_list,
-    };
-    Ok(warp::reply::html(ctx.render_once().unwrap()))
-}
+pub(crate) const BASE_FOLDER: &str = "/Users/hbollamreddi/rustor/home";
 
 pub(crate) async fn ls(path: PathBuf) -> Result<impl warp::Reply, Infallible> {
     let mut dir = tokio::fs::read_dir(path).await.unwrap();
@@ -72,6 +48,59 @@ pub(crate) async fn download(path: PathBuf) -> Result<impl warp::Reply, Infallib
     Ok(Response::builder()
         .header(CONTENT_DISPOSITION, disposition)
         .body(body))
+}
+
+pub(crate) async fn delete(path: PathBuf) -> Result<impl warp::Reply, Infallible> {
+    match path.is_dir() {
+        true => tokio::fs::remove_dir_all(path).await,
+        false => tokio::fs::remove_file(path).await,
+    };
+    Ok(StatusCode::OK)
+}
+
+pub(crate) async fn web_list(path: PathBuf) -> Result<impl warp::Reply, Infallible> {
+    let mut dir = tokio::fs::read_dir(path.clone()).await.unwrap();
+    let mut file_list = Vec::new();
+    while let Some(child) = dir.next_entry().await.unwrap() {
+        file_list.push(FileData {
+            path: urlencoding::encode(
+                child
+                    .path()
+                    .strip_prefix(BASE_FOLDER)
+                    .unwrap()
+                    .to_str()
+                    .unwrap(),
+            ),
+            is_dir: child.path().is_dir(),
+            name: child.file_name().to_str().unwrap().to_string(),
+        });
+    }
+
+    let ctx = DirTemplate {
+        curr_path: path.to_str().unwrap().to_string(),
+        messages: file_list,
+    };
+    Ok(warp::reply::html(ctx.render_once().unwrap()))
+}
+
+pub(crate) async fn web_delete(path: PathBuf) -> Result<impl warp::Reply, Infallible> {
+    let is_deleted;
+    match path.is_dir() {
+        true => is_deleted = tokio::fs::remove_dir_all(path.clone()).await,
+        false => is_deleted = tokio::fs::remove_file(path.clone()).await,
+    };
+    let deletion_string = if let Ok(_) = is_deleted {
+        "Successfully deleted "
+    } else {
+        "Deletion failed for"
+    };
+
+    Ok(warp::reply::html(format!(
+        "<html>\n<body>\n<h2>{} {}</h2>\nVisit <a href=\"/web/ls\">{}</a> to view all the files.\n</body>\n</html>",
+        deletion_string,
+        path.file_name().unwrap().to_str().unwrap(),
+        "WebUI"
+    )))
 }
 
 #[derive(Debug)]

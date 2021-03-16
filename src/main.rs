@@ -24,11 +24,17 @@ async fn main() {
         .and(get_dir())
         .and_then(handlers::ls);
     let api_download = api
-        .and(warp::path("download"))
+        .and(warp::path("dl"))
         .and(warp::path::end())
         .and(warp::get())
         .and(get_file())
         .and_then(handlers::download);
+    let api_delete = api
+        .and(warp::path("rm"))
+        .and(warp::path::end())
+        .and(warp::post())
+        .and(get_path())
+        .and_then(handlers::delete);
 
     // These are web related. They can render stuff when opened in web browser.
     let web = warp::path("web");
@@ -38,17 +44,21 @@ async fn main() {
         .and(warp::get())
         .and(get_dir())
         .and_then(handlers::web_list);
+    let web_delete = web
+        .and(warp::path("rm"))
+        .and(warp::path::end())
+        .and(warp::post())
+        .and(get_path())
+        .and_then(handlers::web_delete);
 
-    // println!("{:?}", vect.);
-    // let health_route = warp::path!("health").map(|| StatusCode::OK);
-    // // GET /hello/warp => 200 OK with body "Hello, warp!"
-    // let hello = warp::path!("hello" / String / ..)
-    //     .and(warp::get())
-    //     .map(|name| format!("Hello, {}!", name));
-    // let routes = (health_route.or(hello)).with(warp::cors().allow_any_origin());
-    //
-    // warp::serve(ss).run(([127, 0, 0, 1], 3030)).await;
-    warp::serve(api_ls.or(api_download).or(web_ls).recover(handle_rejection))
-        .run(([0, 0, 0, 0], 3030))
-        .await;
+    warp::serve(
+        api_ls
+            .or(api_download)
+            .or(api_delete)
+            .or(web_ls)
+            .or(web_delete)
+            .recover(handle_rejection),
+    )
+    .run(([0, 0, 0, 0], 3030))
+    .await;
 }

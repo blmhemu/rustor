@@ -8,6 +8,7 @@ use std::path::PathBuf;
 #[template(path = "index.stpl")] // specify the path to template
 pub(crate) struct DirTemplate {
     // data to be passed to the template
+    pub curr_path: String,
     pub messages: Vec<FileData>,
 }
 
