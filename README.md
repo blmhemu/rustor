@@ -14,6 +14,12 @@ A simple file server to learn rust and warp.
 * Download the file at `my/dir/file.ext` -> `GET http://IP:PORT/api/download?path=my%2Fdir%2Ffile.ext`
 * Delete the file/folder at `my/dir/rec` -> `GET http://IP:PORT/api/rm?path=my%2Fdir%2Frec`
 
+## Capabilities / Features
+[x] View and traverse files
+[x] Download files
+[x] Create Directories
+[ ] Upload files.
+
 ## Dependencies
 * warp, hyper, tokio
 * [sailfish](https://github.com/Kogia-sima/sailfish) for web templating.
