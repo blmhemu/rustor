@@ -12,6 +12,7 @@ A simple file server to learn rust and warp.
 * WebUI can be accessed at http://IP:PORT/web/ls
 * Fetch the list of directories at `my/dir` -> `GET http://IP:PORT/api/ls?path=my%2Fdir`
 * Download the file at `my/dir/file.ext` -> `GET http://IP:PORT/api/download?path=my%2Fdir%2Ffile.ext`
+* Delete the file/folder at `my/dir/rec` -> `GET http://IP:PORT/api/rm?path=my%2Fdir%2Frec`
 
 ## Dependencies
 * warp, hyper, tokio
