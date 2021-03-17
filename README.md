@@ -21,13 +21,19 @@ A simple file server to learn rust and warp.
 - [x] Download files
 - [x] Create folders
 - [x] Delete folders and files
-- [x] Upload files (only small files)
-- [ ] Upload large files with proper sanitization
+- [x] Upload files (tested with file size of ~ 12GB on localhost)
 - [ ] Rename dir / file
+
+## Todos
+- [ ] Code Cleanup
+- [ ] Logging
 
 ## Dependencies
 * warp, hyper, tokio for the basic web server / concurrency stuff.
 * [sailfish](https://github.com/Kogia-sima/sailfish) for web templating.
+
+## Thanks
+* [miniserve](https://github.com/svenstaro/miniserve) for parts of code mainly HTML / CSS / JS
 
 ## Usable Open Source Alternatives
 * [miniserve](https://github.com/svenstaro/miniserve)

@@ -17,3 +17,8 @@ urlencoding = "1.0.0"
 sanitize-filename = "0.3.0"
 futures-util ="0.3"
 bytes = "1.0"
+mpart-async = "0.5"
+mime = "0.3"
+strum = "0.20"
+strum_macros = "0.20"
+

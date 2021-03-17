@@ -1,20 +1,29 @@
 use crate::data;
 use crate::data::{DirTemplate, FileData, QueryOptions};
+use crate::handlers::reject::Reject;
 use bytes::BufMut;
-use futures_util::TryStreamExt;
+use futures_util::{SinkExt, StreamExt, TryFutureExt, TryStreamExt};
+use mime::Mime;
+use mpart_async::server::MultipartStream;
 use sailfish::TemplateOnce;
+use std::collections::{HashMap, HashSet};
 use std::convert::Infallible;
 use std::error;
 use std::error::Error;
+use std::fmt::Debug;
+use std::fs::OpenOptions;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
+use strum_macros::AsRefStr;
 use tokio::io;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_util::codec::{BytesCodec, FramedRead};
 use warp::http::header::{CONTENT_DISPOSITION, CONTENT_ENCODING};
 use warp::http::{HeaderValue, Response, StatusCode};
 use warp::hyper::Body;
 use warp::multipart::{FormData, Part};
 use warp::reply::Json;
-use warp::{hyper, reject, Filter, Rejection, Reply};
+use warp::{hyper, reject, Buf, Filter, Rejection, Reply, Stream};
 
 pub(crate) const BASE_FOLDER: &str = "/Users/hbollamreddi/rustor/home";
 
@@ -133,68 +142,114 @@ pub(crate) async fn web_create(
 
 pub(crate) async fn web_upload(
     path: PathBuf,
-    form: FormData,
+    mime: Mime,
+    body: impl Stream<Item = Result<impl Buf, warp::Error>> + Unpin,
 ) -> Result<impl warp::Reply, Rejection> {
-    let parts: Vec<Part> = form.try_collect().await.unwrap();
-    for part in parts {
-        let mut file_name = String::new();
-        file_name.push_str(part.filename().unwrap());
+    let mut success_set: HashSet<String> = HashSet::new();
+    let boundary = mime.get_param("boundary").map(|v| v.to_string()).unwrap();
 
-        let value = &part
-            .stream()
-            .try_fold(Vec::new(), |mut vec, data| {
-                vec.put(data);
-                async move { Ok(vec) }
-            })
-            .await
-            .unwrap();
+    let mut stream = MultipartStream::new(
+        boundary,
+        body.map_ok(|mut buf| buf.copy_to_bytes(buf.remaining())),
+    );
 
-        tokio::fs::write(path.join(file_name), value).await;
+    while let Ok(Some(mut field)) = stream.try_next().await {
+        println!("Field received:{}", field.name().unwrap());
+        if let Ok(filename) = field.filename() {
+            println!("Field filename:{}", filename);
+            let sanitize_filename = sanitize_filename::sanitize(&filename);
+            if sanitize_filename.trim().is_empty() || sanitize_filename != filename {
+                return Err(warp::reject::custom(CustomErrors::InvalidName));
+            };
+            let file = path.join(&sanitize_filename);
+            if file.clone().exists() {
+                return Err(warp::reject::custom(CustomErrors::FileAlreadyExists));
+            };
+            let mut file = tokio::fs::OpenOptions::new()
+                .write(true)
+                .create(true)
+                .open(file)
+                .await
+                .unwrap();
+            while let Ok(Some(bytes)) = field.try_next().await {
+                file.write_all(&bytes).await;
+            }
+            success_set.insert(String::from(sanitize_filename));
+        }
     }
-    // let new_dir = path.join(name);
-    // let is_created = tokio::fs::create_dir(new_dir.clone()).await;
-    // let creation_string = match is_created {
-    //     Ok(()) => "Successfully created ",
-    //     Err(_) => "Creation failed for",
-    // };
 
-    // Ok(warp::reply::html(format!(
-    //     "<html>\n<body>\n<h2>{} {}</h2>\nReturn to <a href=\"/web/ls?path={}\">created folder</a>.\n</body>\n</html>",
-    //     creation_string,
-    //     new_dir.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap(),
-    //     urlencoding::encode(new_dir.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap()),
-    // )))
-    Ok(StatusCode::OK)
+    Ok(warp::reply::html(format!(
+            "<html>\n<body>\n<h2>{} {}</h2>\nReturn to <a href=\"/web/ls?path={}\">uploaded folder</a>.\n</body>\n</html>",
+            "Successfully uploaded the following files \n",
+            success_set.iter().fold(String::new(), |mut acc: String, file| {
+                acc.push_str(file);
+                acc.push_str(" | ");
+                return acc;
+            }),
+            urlencoding::encode(path.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap()),
+        )))
 }
 
-#[derive(Debug)]
-pub struct NotAFileError;
-#[derive(Debug)]
-pub struct NotADirError;
-#[derive(Debug)]
-pub struct InvalidName;
-#[derive(Debug)]
-pub struct InvalidPathError;
-#[derive(Debug)]
-pub struct TokioError(io::Error);
+// Make error handling even better
+#[derive(Debug, AsRefStr)]
+pub(crate) enum CustomErrors {
+    NotAFileError,
+    NotADirError,
+    InvalidName,
+    FileAlreadyExists,
+    InvalidPathError,
+    TokioError(io::Error),
+}
 
-impl reject::Reject for NotAFileError {}
-impl reject::Reject for NotADirError {}
-impl reject::Reject for InvalidName {}
-impl reject::Reject for InvalidPathError {}
-impl reject::Reject for TokioError {}
+impl reject::Reject for CustomErrors {}
 
+// #[derive(Debug)]
+// pub struct NotAFileError;
+// #[derive(Debug)]
+// pub struct NotADirError;
+// #[derive(Debug)]
+// pub struct InvalidName;
+// #[derive(Debug)]
+// pub struct FileAlreadyExists;
+// #[derive(Debug)]
+// pub struct InvalidPathError;
+// #[derive(Debug)]
+// pub struct TokioError(io::Error);
+//
+// impl reject::Reject for NotAFileError {}
+// impl reject::Reject for NotADirError {}
+// impl reject::Reject for InvalidName {}
+// impl reject::Reject for FileAlreadyExists {}
+// impl reject::Reject for InvalidPathError {}
+// impl reject::Reject for TokioError {}
+
+pub(crate) fn reject_invalid_names() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
+    warp::query::<QueryOptions>().and_then(|opts: QueryOptions| async {
+        match opts.dirname {
+            Some(name) => {
+                let sanitize_filename = sanitize_filename::sanitize(&name);
+                if sanitize_filename.trim().is_empty() || sanitize_filename != name {
+                    return Err(warp::reject::custom(CustomErrors::InvalidName));
+                };
+                Ok(sanitize_filename)
+            }
+            None => Err(warp::reject::custom(CustomErrors::InvalidName)),
+        }
+    })
+}
+
+// TODO: Merge this into above
 pub(crate) fn get_newdir_name() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
     warp::query::<QueryOptions>().and_then(|opts: QueryOptions| async {
         match opts.dirname {
             Some(name) => {
                 let sanitize_filename = sanitize_filename::sanitize(&name);
-                if sanitize_filename.is_empty() || sanitize_filename != name {
-                    return Err(warp::reject::custom(InvalidName));
+                if sanitize_filename.trim().is_empty() || sanitize_filename != name {
+                    return Err(warp::reject::custom(CustomErrors::InvalidName));
                 };
                 Ok(sanitize_filename)
             }
-            None => Err(warp::reject::custom(InvalidName)),
+            None => Err(warp::reject::custom(CustomErrors::InvalidName)),
         }
     })
 }
@@ -219,9 +274,11 @@ async fn get_canonical_path(opts: QueryOptions) -> Result<PathBuf, Rejection> {
     // Canonicalization also tests for existence.
     let abs_path = tokio::fs::canonicalize(abs_path).await;
     match abs_path {
-        Err(e) => Err(warp::reject::custom(TokioError(e))),
+        Err(e) => Err(warp::reject::custom(CustomErrors::TokioError(e))),
         // Todo: Better handling.
-        Ok(path) if !path.starts_with(BASE_FOLDER) => Err(warp::reject::custom(InvalidPathError)),
+        Ok(path) if !path.starts_with(BASE_FOLDER) => {
+            Err(warp::reject::custom(CustomErrors::InvalidPathError))
+        }
         Ok(path) => Ok(path),
     }
 }
@@ -233,7 +290,7 @@ async fn get_valid_file(path: PathBuf) -> Result<PathBuf, Rejection> {
         .unwrap_or(false)
     {
         true => Ok(path),
-        false => Err(warp::reject::custom(NotAFileError)),
+        false => Err(warp::reject::custom(CustomErrors::NotAFileError)),
     }
 }
 
@@ -244,7 +301,7 @@ async fn get_valid_dir(path: PathBuf) -> Result<PathBuf, Rejection> {
         .unwrap_or(false)
     {
         true => Ok(path),
-        false => Err(warp::reject::custom(NotADirError)),
+        false => Err(warp::reject::custom(CustomErrors::NotADirError)),
     }
 }
 
@@ -257,23 +314,27 @@ pub(crate) async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infal
         code = StatusCode::NOT_FOUND;
         message = "NOT_FOUND";
         description = None;
-    } else if let Some(NotAFileError) = err.find() {
+    } else if let Some(CustomErrors::NotAFileError) = err.find() {
         code = StatusCode::BAD_REQUEST;
         message = "NOT_A_FILE";
         description = Some("This operation cannot be done on a directory.");
-    } else if let Some(NotADirError) = err.find() {
+    } else if let Some(CustomErrors::NotADirError) = err.find() {
         code = StatusCode::BAD_REQUEST;
         message = "NOT_A_DIRECTORY";
         description = Some("This operation cannot be done on a file.");
-    } else if let Some(InvalidName) = err.find() {
+    } else if let Some(CustomErrors::InvalidName) = err.find() {
         code = StatusCode::BAD_REQUEST;
         message = "INVALID_NAME";
         description = Some("Please provide a proper name.");
-    } else if let Some(InvalidPathError) = err.find() {
+    } else if let Some(CustomErrors::FileAlreadyExists) = err.find() {
+        code = StatusCode::BAD_REQUEST;
+        message = "FILE_ALREADY_EXISTS";
+        description = Some("Please provide a different name or delete existing file.");
+    } else if let Some(CustomErrors::InvalidPathError) = err.find() {
         code = StatusCode::BAD_REQUEST;
         message = "INVALID_PATH";
         description = Some("Please provide a valid path.");
-    } else if let Some(TokioError(_)) = err.find() {
+    } else if let Some(CustomErrors::TokioError(_)) = err.find() {
         code = StatusCode::BAD_REQUEST;
         message = "INVALID_PATH";
         description = Some("Please provide a valid path.");

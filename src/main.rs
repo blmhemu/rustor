@@ -5,9 +5,11 @@ use warp::multipart::{FormData, FormOptions, Part};
 use warp::{http::StatusCode, Filter, Rejection, Reply};
 
 use crate::data::QueryOptions;
-use crate::handlers::{
-    get_dir, get_file, get_newdir_name, get_path, handle_rejection, InvalidPathError, BASE_FOLDER,
+pub(crate) use crate::handlers::{
+    get_dir, get_file, get_newdir_name, get_path, handle_rejection, CustomErrors::InvalidPathError,
+    BASE_FOLDER,
 };
+use mime::Mime;
 use warp::http::header::CONTENT_DISPOSITION;
 
 mod data;
@@ -66,7 +68,8 @@ async fn main() {
         .and(warp::path::end())
         .and(warp::post())
         .and(get_dir())
-        .and(warp::multipart::form())
+        .and(warp::header::<Mime>("Content-Type"))
+        .and(warp::body::stream())
         .and_then(handlers::web_upload);
 
     warp::serve(
