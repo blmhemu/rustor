@@ -1,7 +1,9 @@
 # rustor
 A simple file server to learn rust and warp. 
 
-**Note: This is a learner's project and is not remotely usable. Also, this can be implemented in a simpler way using `warp::fs::dir`, but where's the fun in that.**
+**Note: This is a learner's project and is not remotely usable.** 
+
+**This can probably be implemented in a simpler way using `warp::fs::dir`, but where's the fun in that.**
 
 ## Build and run
 * **Required:** Edit the `BASE_FOLDER` in `handlers.rs` to point to the folder you want to serve. (I know this is suboptimal).
@@ -19,10 +21,12 @@ A simple file server to learn rust and warp.
 - [x] Download files
 - [x] Create folders
 - [x] Delete folders and files
-- [ ] Upload files
+- [x] Upload files (only small files)
+- [ ] Upload large files with proper sanitization
+- [ ] Rename dir / file
 
 ## Dependencies
-* warp, hyper, tokio
+* warp, hyper, tokio for the basic web server / concurrency stuff.
 * [sailfish](https://github.com/Kogia-sima/sailfish) for web templating.
 
 ## Usable Open Source Alternatives
