@@ -1,5 +1,7 @@
 use crate::data;
 use crate::data::{DirTemplate, FileData, QueryOptions};
+use bytes::BufMut;
+use futures_util::TryStreamExt;
 use sailfish::TemplateOnce;
 use std::convert::Infallible;
 use std::error;
@@ -10,6 +12,7 @@ use tokio_util::codec::{BytesCodec, FramedRead};
 use warp::http::header::{CONTENT_DISPOSITION, CONTENT_ENCODING};
 use warp::http::{HeaderValue, Response, StatusCode};
 use warp::hyper::Body;
+use warp::multipart::{FormData, Part};
 use warp::reply::Json;
 use warp::{hyper, reject, Filter, Rejection, Reply};
 
@@ -96,10 +99,16 @@ pub(crate) async fn web_delete(path: PathBuf) -> Result<impl warp::Reply, Infall
         Err(_) => "Deletion failed for",
     };
 
+    let return_dir = match &path.parent().unwrap().strip_prefix(BASE_FOLDER) {
+        Ok(p) => p.to_str().unwrap(),
+        Err(_) => BASE_FOLDER,
+    };
+
     Ok(warp::reply::html(format!(
-        "<html>\n<body>\n<h2>{} {}</h2>\nReturn to <a href=\"/web/ls\">Home Page</a>.\n</body>\n</html>",
+        "<html>\n<body>\n<h2>{} {}</h2>\nReturn to <a href=\"/web/ls?path={}\">parent directory</a>.\n</body>\n</html>",
         deletion_string,
         path.file_name().unwrap().to_str().unwrap(),
+        urlencoding::encode(return_dir)
     )))
 }
 
@@ -118,8 +127,44 @@ pub(crate) async fn web_create(
         "<html>\n<body>\n<h2>{} {}</h2>\nReturn to <a href=\"/web/ls?path={}\">created folder</a>.\n</body>\n</html>",
         creation_string,
         new_dir.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap(),
-        new_dir.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap(),
+        urlencoding::encode(new_dir.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap()),
     )))
+}
+
+pub(crate) async fn web_upload(
+    path: PathBuf,
+    form: FormData,
+) -> Result<impl warp::Reply, Rejection> {
+    let parts: Vec<Part> = form.try_collect().await.unwrap();
+    for part in parts {
+        let mut file_name = String::new();
+        file_name.push_str(part.filename().unwrap());
+
+        let value = &part
+            .stream()
+            .try_fold(Vec::new(), |mut vec, data| {
+                vec.put(data);
+                async move { Ok(vec) }
+            })
+            .await
+            .unwrap();
+
+        tokio::fs::write(path.join(file_name), value).await;
+    }
+    // let new_dir = path.join(name);
+    // let is_created = tokio::fs::create_dir(new_dir.clone()).await;
+    // let creation_string = match is_created {
+    //     Ok(()) => "Successfully created ",
+    //     Err(_) => "Creation failed for",
+    // };
+
+    // Ok(warp::reply::html(format!(
+    //     "<html>\n<body>\n<h2>{} {}</h2>\nReturn to <a href=\"/web/ls?path={}\">created folder</a>.\n</body>\n</html>",
+    //     creation_string,
+    //     new_dir.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap(),
+    //     urlencoding::encode(new_dir.strip_prefix(BASE_FOLDER).unwrap().to_str().unwrap()),
+    // )))
+    Ok(StatusCode::OK)
 }
 
 #[derive(Debug)]

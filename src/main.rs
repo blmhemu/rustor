@@ -8,6 +8,7 @@ use crate::data::QueryOptions;
 use crate::handlers::{
     get_dir, get_file, get_newdir_name, get_path, handle_rejection, InvalidPathError, BASE_FOLDER,
 };
+use warp::http::header::CONTENT_DISPOSITION;
 
 mod data;
 mod handlers;
@@ -60,6 +61,13 @@ async fn main() {
         .and(get_dir())
         .and(get_newdir_name())
         .and_then(handlers::web_create);
+    let web_upload = web
+        .and(warp::path("upload"))
+        .and(warp::path::end())
+        .and(warp::post())
+        .and(get_dir())
+        .and(warp::multipart::form())
+        .and_then(handlers::web_upload);
 
     warp::serve(
         api_ls
@@ -68,6 +76,7 @@ async fn main() {
             .or(web_ls)
             .or(web_delete)
             .or(web_create)
+            .or(web_upload)
             .recover(handle_rejection),
     )
     .run(([0, 0, 0, 0], 3030))
