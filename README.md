@@ -7,7 +7,7 @@ A simple file server to learn rust and warp.
 
 ## Build and run
 * **Required:** Edit the `BASE_FOLDER` in `handlers.rs` to point to the folder you want to serve. (I know this is suboptimal).
-* Change the IP (say from 0.0.0.0 to 127.0.0.1) and Port (say 3030:8080) per your needs. (Again, suboptimal and should ideally be read from a config file)
+* Change the IP (say from 0.0.0.0 to 127.0.0.1) and Port (say 3030 to 8080) per your needs. (Again, suboptimal and should ideally be read from a config file)
 * Run `cargo run`
 
 ## API
