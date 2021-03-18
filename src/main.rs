@@ -72,16 +72,10 @@ async fn main() {
         .and(warp::body::stream())
         .and_then(handlers::web_upload);
 
-    warp::serve(
-        api_ls
-            .or(api_download)
-            .or(api_delete)
-            .or(web_ls)
-            .or(web_delete)
-            .or(web_create)
-            .or(web_upload)
-            .recover(handle_rejection),
-    )
-    .run(([0, 0, 0, 0], 3030))
-    .await;
+    let api_routes = api_ls.or(api_download).or(api_delete);
+    let web_routes = web_ls.or(web_delete).or(web_create).or(web_upload);
+
+    warp::serve(api_routes.or(web_routes).recover(handle_rejection))
+        .run(([0, 0, 0, 0], 3030))
+        .await;
 }
