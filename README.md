@@ -22,8 +22,10 @@ A simple file server to learn rust and warp.
 - [x] Create folders
 - [x] Delete folders and files
 - [x] Upload files (tested with file size of ~ 12GB on localhost)
-- [ ] Rename dir / file
 - [ ] Multi tenant and auth
+- [ ] Rename dir / file
+- [ ] Move file / dir
+
 
 ## Todos
 - [ ] Code Cleanup
