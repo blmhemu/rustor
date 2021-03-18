@@ -17,6 +17,7 @@ A simple file server to learn rust and warp.
 * Delete the file/folder at `my/dir/rec` -> `GET http://IP:PORT/api/rm?path=my%2Fdir%2Frec`
 
 ## Capabilities / Features
+- [x] File and path sanitization to prevent directory attacks.
 - [x] View and traverse folders
 - [x] Download files
 - [x] Create folders
@@ -34,6 +35,7 @@ A simple file server to learn rust and warp.
 ## Dependencies
 * warp, hyper, tokio for the basic web server / concurrency stuff.
 * [sailfish](https://github.com/Kogia-sima/sailfish) for web templating.
+* Other helper libs.
 
 ## Thanks
 * [miniserve](https://github.com/svenstaro/miniserve) for parts of code mainly HTML / CSS / JS
