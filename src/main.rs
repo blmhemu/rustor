@@ -5,9 +5,8 @@ use warp::multipart::{FormData, FormOptions, Part};
 use warp::{http::StatusCode, Filter, Rejection, Reply};
 
 use crate::data::QueryOptions;
-pub(crate) use crate::handlers::{
-    get_dir, get_file, get_newdir_name, get_path, handle_rejection, CustomErrors::InvalidPathError,
-    BASE_FOLDER,
+use crate::handlers::{
+    get_dir, get_file, get_newdir_name, get_path, handle_rejection, BASE_FOLDER,
 };
 use mime::Mime;
 use warp::http::header::CONTENT_DISPOSITION;
