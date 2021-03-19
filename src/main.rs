@@ -75,8 +75,7 @@ async fn main() {
 
     let api_routes = api_ls.or(api_download).or(api_delete);
     let web_routes = web_ls.or(web_delete).or(web_create).or(web_upload);
-    let cors = warp::cors::cors()
-        .allow_any_origin();
+    let cors = warp::cors::cors().allow_any_origin();
 
     warp::serve(
         api_routes
