@@ -29,7 +29,7 @@ A simple file server to learn rust and warp.
 
 
 ## Todos
-- [ ] Code Cleanup
+- [ ] Code Cleanup, Import Optimization
 - [ ] Logging
 
 ## Dependencies
