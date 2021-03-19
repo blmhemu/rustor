@@ -11,6 +11,7 @@ pub(crate) use crate::handlers::{
 };
 use mime::Mime;
 use warp::http::header::CONTENT_DISPOSITION;
+use warp::http::Method;
 
 mod data;
 mod handlers;
@@ -74,8 +75,15 @@ async fn main() {
 
     let api_routes = api_ls.or(api_download).or(api_delete);
     let web_routes = web_ls.or(web_delete).or(web_create).or(web_upload);
+    let cors = warp::cors::cors()
+        .allow_any_origin();
 
-    warp::serve(api_routes.or(web_routes).recover(handle_rejection))
-        .run(([0, 0, 0, 0], 3030))
-        .await;
+    warp::serve(
+        api_routes
+            .or(web_routes)
+            .with(cors)
+            .recover(handle_rejection),
+    )
+    .run(([0, 0, 0, 0], 3030))
+    .await;
 }
