@@ -9,8 +9,8 @@ A simple file server to learn rust and warp.
 * **Required:** Edit the `BASE_FOLDER` in `handlers.rs` to point to the folder you want to serve. (I know this is suboptimal).
 * Change the IP (say from 0.0.0.0 to 127.0.0.1) and Port (say 3030 to 8080) per your needs. (Again, suboptimal and should ideally be read from a config file)
 * Run `cargo run`
-* Experimental UI can be accessed by running `pnpm dev` or `npm dev` in `sapper` folder (Backend must be on localhost:3030)
-* Even more experimental UI can be accessed by running `pnpm dev` or `npm dev` in `sveltekit` folder (Backend must be on localhost:3030)
+* Experimental in-progress UI can be accessed by running `pnpm dev` or `npm dev` in `sapper` folder (Backend must be on localhost:3030)
+* Even more experimental and in-progress UI can be accessed by running `pnpm dev` or `npm dev` in `sveltekit` folder (Backend must be on localhost:3030)
 
 ## API
 * Stable webUI can be accessed at http://IP_IN_RUST:PORT_IN_RUST/web/ls
