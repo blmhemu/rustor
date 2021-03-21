@@ -13,7 +13,8 @@ A simple file server to learn rust and warp.
 * Even more experimental UI can be accessed by running `pnpm dev` or `npm dev` in `sveltekit` folder (Backend must be on localhost:3030)
 
 ## API
-* WebUI can be accessed at http://IP:PORT/web/ls
+* Stable webUI can be accessed at http://IP_IN_RUST:PORT_IN_RUST/web/ls
+* Experimental UIs can be accessed at http://IP_IN_SAPPER:PORT_IN_SAPPER/files
 * Fetch the list of directories at `my/dir` -> `GET http://IP:PORT/api/ls?path=my%2Fdir`
 * Download the file at `my/dir/file.ext` -> `GET http://IP:PORT/api/download?path=my%2Fdir%2Ffile.ext`
 * Delete the file/folder at `my/dir/rec` -> `GET http://IP:PORT/api/rm?path=my%2Fdir%2Frec`
