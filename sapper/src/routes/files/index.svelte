@@ -1,5 +1,5 @@
 <div class="flex flex-col flex-wrap gap-4 py-4">
-  <div class="text-xl text-pink-900">Folders</div>
+  <div class="text-2xl text-pink-900">Folders</div>
   <div
     class="grid grid-flow-row gap-2 grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7"
   >
@@ -10,7 +10,7 @@
       <File fileData={folder} on:dblclick={() => gotoOrGet(folder)} />
     {/each}
   </div>
-  <div class="text-xl text-pink-900">Files</div>
+  <div class="text-2xl text-pink-900">Files</div>
   {#if files.length == 0}
     <div class="text-center text-4xl">No Files</div>
   {/if}
