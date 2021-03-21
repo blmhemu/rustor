@@ -1,14 +1,29 @@
 <div
-  class="group cursor-pointer flex flex-col rounded-lg p-2 space-y-2 border-4 border-transparent hover:border-blue-400"
+  class="group cursor-pointer flex flex-col rounded-lg select-none p-2 space-y-2 border-4 border-transparent hover:border-blue-400"
   on:dblclick
 >
+  <!-- <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class="feather feather-download self-end"
+    ><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline
+      points="7 10 12 15 17 10"
+    /><line x1="12" y1="15" x2="12" y2="3" /></svg
+  > -->
   {#if fileData.is_dir}
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="100"
       height="100"
       viewBox="0 0 24 24"
-      fill="none"
+      fill="gray"
       stroke="currentColor"
       stroke-width="1"
       stroke-linecap="round"
@@ -24,7 +39,7 @@
       width="100"
       height="100"
       viewBox="0 0 24 24"
-      fill="none"
+      fill="gray"
       stroke="currentColor"
       stroke-width="1"
       stroke-linecap="round"
@@ -35,7 +50,7 @@
       /><polyline points="13 2 13 9 20 9" /></svg
     >
   {/if}
-  <p class="text-lg text-center truncate text-gray-600">
+  <p class="select-text text-lg text-center truncate text-gray-600">
     {fileData.name}
   </p>
   <button

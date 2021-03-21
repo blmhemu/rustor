@@ -1,6 +1,4 @@
-<div
-  class="grid grid-flow-row-dense gap-2 grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7"
->
+<div class="flex flex-row flex-wrap gap-2">
   {#each files as file}
     <File fileData={file} on:dblclick={() => gotoOrGet(file)} />
   {/each}
