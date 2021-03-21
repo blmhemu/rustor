@@ -38,6 +38,7 @@ A simple file server to learn rust and warp.
 ## Dependencies
 * warp, hyper, tokio for the basic web server / concurrency stuff.
 * [sailfish](https://github.com/Kogia-sima/sailfish) for web templating.
+* svelte / sapper for experimental ui
 * Other helper libs.
 
 ## Thanks
