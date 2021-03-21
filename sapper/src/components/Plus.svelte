@@ -14,9 +14,26 @@
       aria-haspopup="true"
       on:click={toggleDropDown}
     >
-      Options
-      <!-- Heroicon name: solid/chevron-down -->
       <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="feather feather-plus-circle"
+        ><circle cx="12" cy="12" r="10" /><line
+          x1="12"
+          y1="8"
+          x2="12"
+          y2="16"
+        /><line x1="8" y1="12" x2="16" y2="12" /></svg
+      >
+      <!-- Heroicon name: solid/chevron-down -->
+      <!-- <svg
         class="-mr-1 ml-2 h-5 w-5"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
@@ -28,7 +45,7 @@
           d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
           clip-rule="evenodd"
         />
-      </svg>
+      </svg> -->
     </button>
   </div>
 
