@@ -10,7 +10,7 @@ A simple file server to learn rust and warp.
 * Change the IP (say from 0.0.0.0 to 127.0.0.1) and Port (say 3030 to 8080) per your needs. (Again, suboptimal and should ideally be read from a config file)
 * Run `cargo run`
 * Experimental UI can be accessed by running `pnpm dev` or `npm dev` in `sapper` folder (Backend must be on localhost:3030)
-* Even more experimental UI can be accessed by running `pnpm dev` or `npm dev` in `svelteui` folder (Backend must be on localhost:3030)
+* Even more experimental UI can be accessed by running `pnpm dev` or `npm dev` in `sveltekit` folder (Backend must be on localhost:3030)
 
 ## API
 * WebUI can be accessed at http://IP:PORT/web/ls
