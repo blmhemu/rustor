@@ -41,7 +41,7 @@
       };
     }
     return {
-      status: 301,
+      status: 307,
       redirect: '/files/',
     };
   }
