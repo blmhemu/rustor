@@ -1,4 +1,3 @@
-<!-- This example requires Tailwind CSS v2.0+ -->
 <div
   class="relative inline-block text-left"
   use:clickOutside
