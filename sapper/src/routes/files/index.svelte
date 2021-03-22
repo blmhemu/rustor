@@ -1,5 +1,13 @@
 <Plus />
-<div class="flex flex-col flex-wrap gap-4 py-4">
+<div
+  class="flex flex-col flex-wrap gap-4 py-4"
+  use:clickOutside
+  on:clickoutside={() => {
+    for (var file of folders) {
+      selectlist[file.path] = false;
+    }
+  }}
+>
   <div class="text-2xl text-pink-900">Folders</div>
   {#if folders.length == 0}
     <div class="text-center text-4xl">No Folders</div>
@@ -14,11 +22,6 @@
         on:dblclick={() => gotoOrGet(folder)}
         on:click={(e) => addToSelected(folder.path, e)}
       />
-      <!-- on:clickoutside={() => {
-        for (var file of folders) {
-          selectlist[file.path] = false;
-        }
-      }} -->
     {/each}
   </div>
   <div class="text-2xl text-pink-900">Files</div>
@@ -66,6 +69,7 @@
   import type { FileData } from '../../components/File.svelte';
   import { goto } from '@sapper/app';
   import Plus from '../../components/Plus.svelte';
+  import { clickOutside } from '../../components/clickOutside.js';
 
   export let files: FileData[];
   export let folders: FileData[];
