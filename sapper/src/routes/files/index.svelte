@@ -8,7 +8,12 @@
     class="grid grid-flow-row gap-2 grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7"
   >
     {#each folders as folder}
-      <File fileData={folder} on:dblclick={() => gotoOrGet(folder)} />
+      <File
+        fileData={folder}
+        bind:selected={selectlist[folder.path]}
+        on:dblclick={() => gotoOrGet(folder)}
+        on:click={(e) => addToSelected(folder.path, e)}
+      />
     {/each}
   </div>
   <div class="text-2xl text-pink-900">Files</div>
@@ -60,6 +65,11 @@
   export let files: FileData[];
   export let folders: FileData[];
 
+  let selectlist = {};
+  for (var file of folders) {
+    selectlist[file.path] = false;
+  }
+
   async function gotoOrGet(fileData: FileData) {
     if (fileData.is_dir) {
       await goto('/files/' + fileData.path);
@@ -77,6 +87,18 @@
           a.click();
           window.URL.revokeObjectURL(url);
         });
+    }
+  }
+
+  async function addToSelected(params: string, event) {
+    if (event.metaKey) {
+      selectlist[params] = !selectlist[params];
+      console.log('Selected ' + JSON.stringify(selectlist));
+    } else {
+      for (var file of folders) {
+        selectlist[file.path] = false;
+      }
+      selectlist[params] = true;
     }
   }
 </script>

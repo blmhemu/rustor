@@ -1,6 +1,9 @@
 <div
-  class="group cursor-pointer flex flex-col rounded-lg select-none p-2 space-y-2 border-4 border-transparent hover:border-blue-400"
+  class="{selected
+    ? 'bg-red-400'
+    : 'bg-blue-400'} group cursor-pointer flex flex-col rounded-lg select-none p-2 space-y-2 border-4 border-transparent hover:border-blue-400"
   on:dblclick
+  on:click
 >
   <!-- <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -60,9 +63,10 @@
 </div>
 
 <script lang="ts" context="module">
-  export type FileData = { name: string; is_dir: boolean; path: boolean };
+  export type FileData = { name: string; is_dir: boolean; path: string };
 </script>
 
 <script lang="ts">
   export let fileData: FileData;
+  export let selected = false;
 </script>
