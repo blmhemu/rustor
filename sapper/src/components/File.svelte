@@ -4,6 +4,8 @@
     : 'bg-blue-400'} group cursor-pointer flex flex-col rounded-lg select-none p-2 space-y-2 border-4 border-transparent hover:border-blue-400"
   on:dblclick
   on:click
+  use:clickOutside
+  on:clickoutside
 >
   <!-- <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -67,6 +69,7 @@
 </script>
 
 <script lang="ts">
+  import { clickOutside } from './clickOutside.js';
   export let fileData: FileData;
   export let selected = false;
 </script>

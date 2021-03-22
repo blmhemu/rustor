@@ -14,6 +14,11 @@
         on:dblclick={() => gotoOrGet(folder)}
         on:click={(e) => addToSelected(folder.path, e)}
       />
+      <!-- on:clickoutside={() => {
+        for (var file of folders) {
+          selectlist[file.path] = false;
+        }
+      }} -->
     {/each}
   </div>
   <div class="text-2xl text-pink-900">Files</div>

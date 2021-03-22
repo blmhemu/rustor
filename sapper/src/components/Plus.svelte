@@ -1,7 +1,7 @@
 <div
   class="relative inline-block text-left"
   use:clickOutside
-  on:click_outside={() => {
+  on:clickoutside={() => {
     show = false;
   }}
 >
