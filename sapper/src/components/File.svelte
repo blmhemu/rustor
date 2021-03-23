@@ -1,7 +1,6 @@
 <div
-  class="{selected
-    ? 'bg-red-400'
-    : 'bg-blue-400'} group cursor-pointer flex flex-col rounded-lg select-none p-2 space-y-2 border-4 border-transparent hover:border-blue-400"
+  class:bg-blue-200={selected == true}
+  class="group cursor-pointer flex flex-col rounded-lg select-none p-2 space-y-2 border-4 border-transparent hover:border-blue-400"
   on:dblclick
   on:click
   use:clickOutside
@@ -58,10 +57,10 @@
   <p class="select-text text-lg text-center truncate text-gray-600">
     {fileData.name}
   </p>
-  <button
+  <!-- <button
     class="rounded-lg bg-red-300 transition-opacity delay-100 duration-100 opacity-0 ease-in-out group-hover:opacity-100 ring ring-pink-600"
     >Download</button
-  >
+  > -->
 </div>
 
 <script lang="ts" context="module">
