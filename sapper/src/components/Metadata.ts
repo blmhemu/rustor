@@ -1,5 +1,4 @@
 import { writable } from 'svelte/store';
-import { onDestroy } from 'svelte';
 
 export type Metadata = { name: string; is_dir: boolean; path: string };
 
@@ -17,7 +16,7 @@ function createSelected() {
     return {
         subscribe,
         reset,
-        smartadd: (event, item) => {
+        smartadd: (event: MouseEvent, item: Metadata) => {
             if (event.ctrlKey || event.metaKey) {
                 addOrRemove(item);
             } else {
