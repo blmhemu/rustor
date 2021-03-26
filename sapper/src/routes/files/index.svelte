@@ -1,13 +1,10 @@
-<Plus />
+<Plus on:message={createDir} on:message />
 <div
   class="flex flex-col flex-wrap gap-4 py-4"
   use:clickOutside
-  on:clickoutside={() => {
-    for (var file of folders) {
-      selectlist[file.path] = false;
-    }
-  }}
+  on:clickoutside={selected.reset}
 >
+  <OptionBar />
   <div class="text-2xl text-pink-900">Folders</div>
   {#if folders.length == 0}
     <div class="text-center text-4xl">No Folders</div>
@@ -16,12 +13,7 @@
     class="grid grid-flow-row gap-2 grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7"
   >
     {#each folders as folder}
-      <File
-        fileData={folder}
-        bind:selected={selectlist[folder.path]}
-        on:dblclick={() => gotoOrGet(folder)}
-        on:click={(e) => addToSelected(folder.path, e)}
-      />
+      <Folder {folder} on:dblclick={() => gotoOrGet(folder)} />
     {/each}
   </div>
   <div class="text-2xl text-pink-900">Files</div>
@@ -32,17 +24,17 @@
     class="grid grid-flow-row gap-2 grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7"
   >
     {#each files as file}
-      <File fileData={file} on:dblclick={() => gotoOrGet(file)} />
+      <File {file} on:dblclick={() => gotoOrGet(file)} />
     {/each}
   </div>
 </div>
 
 <script lang="ts" context="module">
-  export async function preload(page, session) {
+  export async function preload() {
     const res = await this.fetch(`http://127.0.0.1:3030/api/ls`);
     if (res.ok) {
       const jsonBody = await res.json();
-      const fileDatas = jsonBody as FileData[];
+      const fileDatas = jsonBody as Metadata[];
       let files = [];
       let folders = [];
       fileDatas.forEach((fileData) => {
@@ -65,23 +57,24 @@
 </script>
 
 <script lang="ts">
-  import File from '../../components/File.svelte';
-  import type { FileData } from '../../components/File.svelte';
-  import { goto } from '@sapper/app';
   import Plus from '../../components/Plus.svelte';
+  import File from '../../components/File.svelte';
+  import Folder from '../../components/Folder.svelte';
+  import type { Metadata } from '../../components/Metadata';
+  import { selected } from '../../components/Metadata';
+
+  import { goto } from '@sapper/app';
   import { clickOutside } from '../../components/clickOutside.js';
+  import OptionBar from '../../components/OptionBar.svelte';
+  import { onDestroy } from 'svelte';
 
-  export let files: FileData[];
-  export let folders: FileData[];
+  export let files: Metadata[];
+  export let folders: Metadata[];
 
-  let selectlist = {};
-  for (var file of folders) {
-    selectlist[file.path] = false;
-  }
-
-  async function gotoOrGet(fileData: FileData) {
+  async function gotoOrGet(fileData: Metadata) {
     if (fileData.is_dir) {
       await goto('/files/' + fileData.path);
+      selected.reset();
     } else {
       fetch('http://127.0.0.1:3030/api/dl?path=' + fileData.path)
         .then((resp) => resp.blob())
@@ -99,15 +92,36 @@
     }
   }
 
-  async function addToSelected(params: string, event) {
-    if (event.metaKey) {
-      selectlist[params] = !selectlist[params];
-      console.log('Selected ' + JSON.stringify(selectlist));
-    } else {
-      for (var file of folders) {
-        selectlist[file.path] = false;
-      }
-      selectlist[params] = true;
+  async function createDir(event) {
+    let response = await fetch(
+      'http://127.0.0.1:3030/web/mkdir?dirname=' + event.detail.text
+    );
+    if (response.ok) {
     }
   }
+
+  async function refreshData() {
+    const res = await fetch(`http://127.0.0.1:3030/api/ls`);
+    if (res.ok) {
+      const jsonBody = await res.json();
+      const fileDatas = jsonBody as Metadata[];
+      let foldersnew = [];
+      let filesnew = [];
+      fileDatas.forEach((fileData) => {
+        if (fileData.is_dir) {
+          foldersnew.push(fileData);
+        } else {
+          filesnew.push(fileData);
+        }
+      });
+      files = filesnew;
+      folders = foldersnew;
+    }
+  }
+
+  $: console.log($selected);
+
+  onDestroy(() => {
+    selected.reset();
+  });
 </script>

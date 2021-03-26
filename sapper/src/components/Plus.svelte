@@ -74,7 +74,7 @@
           role="menuitem"
           on:click={toggleModall}
         >
-          EditDiv
+          New Folder
         </div>
         <a
           href="#"
@@ -122,26 +122,20 @@
   {/if}
 </div>
 
-{#if modals}
-  <Modal on:click={toggleModall}>
-    <div slot="content">
-      <p>ol</p>
-    </div>
-  </Modal>
-{/if}
+<ModalUpload bind:modalshow on:message />
 
 <script lang="ts">
   import { clickOutside } from './clickOutside.js';
   import { scale } from 'svelte/transition';
-  import Modal from './Modal.svelte';
+  import ModalUpload from './ModalUpload.svelte';
 
   let show: boolean = false;
-  let modals: boolean = false;
+  let modalshow: boolean = false;
   function toggleDropDown() {
     show = !show;
   }
   function toggleModall() {
     show = false;
-    modals = true;
+    modalshow = true;
   }
 </script>

@@ -1,5 +1,10 @@
-<Plus />
-<div class="flex flex-col flex-wrap gap-4 py-4">
+<!-- <Plus on:message={createDir} on:message /> -->
+<div
+  class="flex flex-col flex-wrap gap-4 py-4"
+  use:clickOutside
+  on:clickoutside={selected.reset}
+>
+  <OptionBar />
   <div class="text-2xl text-pink-900">Folders</div>
   {#if folders.length == 0}
     <div class="text-center text-4xl">No Folders</div>
@@ -8,7 +13,7 @@
     class="grid grid-flow-row gap-2 grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7"
   >
     {#each folders as folder}
-      <File fileData={folder} on:dblclick={() => gotoOrGet(folder)} />
+      <Folder {folder} on:dblclick={() => gotoOrGet(folder)} />
     {/each}
   </div>
   <div class="text-2xl text-pink-900">Files</div>
@@ -19,7 +24,7 @@
     class="grid grid-flow-row gap-2 grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7"
   >
     {#each files as file}
-      <File fileData={file} on:dblclick={() => gotoOrGet(file)} />
+      <File {file} on:dblclick={() => gotoOrGet(file)} />
     {/each}
   </div>
 </div>
@@ -30,7 +35,7 @@
     const res = await this.fetch(`http://127.0.0.1:3030/api/ls?path=` + slug);
     if (res.ok) {
       const jsonBody = await res.json();
-      const fileDatas = jsonBody as FileData[];
+      const fileDatas = jsonBody as Metadata[];
       let files = [];
       let folders = [];
       fileDatas.forEach((fileData) => {
@@ -53,17 +58,24 @@
 </script>
 
 <script lang="ts">
-  import File from '../../components/File.svelte';
-  import type { FileData } from '../../components/File.svelte';
-  import { goto } from '@sapper/app';
   import Plus from '../../components/Plus.svelte';
+  import File from '../../components/File.svelte';
+  import Folder from '../../components/Folder.svelte';
+  import type { Metadata } from '../../components/Metadata';
+  import { selected } from '../../components/Metadata';
 
-  export let files: FileData[];
-  export let folders: FileData[];
+  import { goto } from '@sapper/app';
+  import { clickOutside } from '../../components/clickOutside.js';
+  import OptionBar from '../../components/OptionBar.svelte';
+  import { onDestroy } from 'svelte';
 
-  async function gotoOrGet(fileData: FileData) {
+  export let files: Metadata[];
+  export let folders: Metadata[];
+
+  async function gotoOrGet(fileData: Metadata) {
     if (fileData.is_dir) {
       await goto('/files/' + fileData.path);
+      selected.reset();
     } else {
       fetch('http://127.0.0.1:3030/api/dl?path=' + fileData.path)
         .then((resp) => resp.blob())
@@ -80,4 +92,10 @@
         });
     }
   }
+
+  $: console.log($selected);
+
+  onDestroy(() => {
+    selected.reset();
+  });
 </script>
