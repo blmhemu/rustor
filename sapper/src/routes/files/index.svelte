@@ -31,6 +31,7 @@
 
 <script lang="ts" context="module">
   export async function preload() {
+    selected.reset();
     const res = await this.fetch(`http://127.0.0.1:3030/api/ls`);
     if (res.ok) {
       const jsonBody = await res.json();
@@ -74,7 +75,6 @@
   async function gotoOrGet(fileData: Metadata) {
     if (fileData.is_dir) {
       await goto('/files/' + fileData.path);
-      selected.reset();
     } else {
       fetch('http://127.0.0.1:3030/api/dl?path=' + fileData.path)
         .then((resp) => resp.blob())
